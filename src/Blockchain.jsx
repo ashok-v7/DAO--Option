@@ -12,7 +12,7 @@ window.web3=new Web3(window.web3.currentProvider)
 const connectWallet = async()=>{
 try{
     if(!ethereum) return alert("please install metamask in browseer")
-    const accounts = await ethereum.request({method:"eth_requestAccounts"})
+    const accounts = await ethereum.request({method:"eth_requestAccounts"})  // by using metamask API 
     setGlobalState('connectAccount',accounts[0].toLowerCase())
 }
 catch(error){
@@ -21,11 +21,13 @@ catch(error){
 
 }
 
+// metamask docs
+
 const isWalletConnected = async()=>{
     try{
         if(!ethereum) return alert("please install metamask");
         const accounts = await ethereum.request({method:"eth_accounts"})
-        window.ethereum.om('chainChanged',(chainId)=>{
+        window.ethereum.om('chainChanged',(chainId)=>{                     // using metamask Events
             window.location.reload()
         })
 
@@ -53,28 +55,31 @@ const isWalletConnected = async()=>{
 const getEthereumContract = async() => {
 
     const connectedAccount = getGlobalState('connectedAccount')
+
     if(connectedAccount){
         const web3 = window.web3
-        const   networkId   = await web3.eth.net.getId()  // will get the network ID 
-        const   networkData = await abi.networks[networkId]  
-        if (networkData) {ethers.utils.parse
-            const contract = new web3.eth.Contract(abi.abi,networkData.address)  // similar to getcontract Factory in ethers 
+      //  const   networkId   = await web3.eth.net.getId()  // will get the network ID 
+      //  const   networkData = await abi.networks[networkId]  
+         
+          //  const contract = new web3.eth.Contract(abi.abi,networkData.address)  // similar to getcontract Factory in ethers 
+            const contract = new web3.eth.Contract(abi.abi,address)
             return contract
-        }else {
-            return null
-        }
+        
     }else {
         return getGlobalState('contract')
     }
 }
 
+// 
+
 const performContribute = async(amount) => {
     try{
         amount= window.web3.utils.toWei(amount.toString(),'ether')  //   In ethers.js --> we have ethers.utils.parse
-        const contract = await getEthereumContract()
+        const contract = await getEthereumContract()  // It will refer to the DAO smart contract i.e.., DAO.json abi
         const account = getGlobalState('connectedAccount')
         
-        await contract.methods.contribute().sender({from:account,value:amount}) ///// execution of contribute function from DAO smartcontract
+        await contract.methods.contribute().sender({from:account,value:amount}) // execution of contribute function from DAO smartcontract, form component we can get the amount
+
         window.location.reload()
     }catch(error){
         reportError(error)
@@ -82,16 +87,16 @@ const performContribute = async(amount) => {
     }
 }
 
-// getInfo to check person is  a stake holder or not , get DAO balance, individual balance
+     // getInfo to check person is  a stake holder or not , get DAO balance, individual balance implemnted using react-hooks-global-statereact-hooks-global-state  
 const getInfo= async () => {
     try {
         if(!ethereum) return alert("please install metamask")
-        const contract = await getEthereumContract()
+        const contract = await getEthereumContract()          
         const connectedAccount = getGlobalState('connectedAccount')
         const isStakeholder = await contract.methods.isStakeholder().call({from:connectedAccount})
         const balance=await contract.methods.daoBalance().call()
         const myBalance = await contract.methods.getBalance().call({from:connectedAccount})
-        setGlobalState('Balance',window.web3.utils.fromWei(balance))
+        setGlobalState('Balance',window.web3.utils.fromWei(balance))       
         setGlobalState("myBalance",window.web3.utils.fromWei(myBalance))
         setGlobalState("isStakeHolder",isStakeholder)
     }catch(error){
